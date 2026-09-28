@@ -1,6 +1,12 @@
 package br.com.agenciaempregos.forms;
 
 import br.com.agenciaempregos.main.TelaPrincipal;
+import br.com.agenciaempregos.dao.CandidatoDAO;
+import br.com.agenciaempregos.main.Sessao;
+import br.com.agenciaempregos.main.Util;
+import br.com.agenciaempregos.model.Candidato;
+import java.sql.SQLException;
+import javax.swing.JOptionPane;
 
 public class PerfilCandidatoPanel extends javax.swing.JPanel {
 
@@ -9,6 +15,14 @@ public class PerfilCandidatoPanel extends javax.swing.JPanel {
     public PerfilCandidatoPanel(TelaPrincipal tela) {
         this.tela = tela;
         initComponents();
+        txtNome.setEditable(false);
+        txtEmail.setEditable(false);
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentShown(java.awt.event.ComponentEvent e) {
+                carregar();
+            }
+        });
     }
 
     @SuppressWarnings("unchecked")
@@ -181,6 +195,11 @@ public class PerfilCandidatoPanel extends javax.swing.JPanel {
         btnSalvar.setBorderPainted(false);
         btnSalvar.setFocusPainted(false);
         btnSalvar.setPreferredSize(new java.awt.Dimension(150, 36));
+        btnSalvar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSalvarActionPerformed(evt);
+            }
+        });
         pnlBotoes.add(btnSalvar);
         pnlConteudo.add(pnlBotoes, java.awt.BorderLayout.SOUTH);
         add(pnlConteudo, java.awt.BorderLayout.CENTER);
@@ -190,6 +209,31 @@ public class PerfilCandidatoPanel extends javax.swing.JPanel {
         tela.mostrar(TelaPrincipal.DASHBOARD_CANDIDATO);
     }//GEN-LAST:event_btnVoltarActionPerformed
 
+
+    private void btnSalvarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSalvarActionPerformed
+        Candidato candidato = Sessao.candidato;
+        candidato.setTelefone(txtTelefone.getText().trim());
+        candidato.setAreaInteresse((String) cmbArea.getSelectedItem());
+        candidato.setResumo(txaResumo.getText().trim());
+        try {
+            new CandidatoDAO().atualizar(candidato);
+            JOptionPane.showMessageDialog(this, "Perfil salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+        } catch (SQLException e) {
+            Util.erro(this, e);
+        }
+    }//GEN-LAST:event_btnSalvarActionPerformed
+
+    private void carregar() {
+        if (Sessao.candidato == null) {
+            return;
+        }
+        Candidato candidato = Sessao.candidato;
+        txtNome.setText(Sessao.usuario.getNome());
+        txtEmail.setText(Sessao.usuario.getEmail());
+        txtTelefone.setText(Util.texto(candidato.getTelefone()));
+        Util.selecionar(cmbArea, candidato.getAreaInteresse());
+        txaResumo.setText(Util.texto(candidato.getResumo()));
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnSalvar;

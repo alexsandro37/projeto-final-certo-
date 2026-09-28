@@ -1,14 +1,37 @@
 package br.com.agenciaempregos.forms;
 
 import br.com.agenciaempregos.main.TelaPrincipal;
+import br.com.agenciaempregos.dao.CandidaturaDAO;
+import br.com.agenciaempregos.dao.VagaDAO;
+import br.com.agenciaempregos.main.Sessao;
+import br.com.agenciaempregos.main.Util;
+import br.com.agenciaempregos.model.Candidatura;
+import br.com.agenciaempregos.model.Vaga;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.JOptionPane;
 
 public class BuscarVagasPanel extends javax.swing.JPanel {
 
     private final TelaPrincipal tela;
+    private List<Vaga> vagas = new ArrayList<>();
 
     public BuscarVagasPanel(TelaPrincipal tela) {
         this.tela = tela;
         initComponents();
+        txaDescricao.setEditable(false);
+        tblVagas.getSelectionModel().addListSelectionListener(e -> {
+            int linha = tblVagas.getSelectedRow();
+            txaDescricao.setText(linha < 0 ? "" : Util.texto(vagas.get(tblVagas.convertRowIndexToModel(linha)).getDescricao()));
+            txaDescricao.setCaretPosition(0);
+        });
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentShown(java.awt.event.ComponentEvent e) {
+                carregar();
+            }
+        });
     }
 
     @SuppressWarnings("unchecked")
@@ -76,6 +99,11 @@ public class BuscarVagasPanel extends javax.swing.JPanel {
         btnBuscar.setBorderPainted(false);
         btnBuscar.setFocusPainted(false);
         btnBuscar.setPreferredSize(new java.awt.Dimension(110, 32));
+        btnBuscar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnBuscarActionPerformed(evt);
+            }
+        });
         pnlFiltro.add(btnBuscar);
         pnlConteudo.add(pnlFiltro, java.awt.BorderLayout.NORTH);
         pnlLista.setBackground(new java.awt.Color(244, 246, 248));
@@ -126,6 +154,11 @@ public class BuscarVagasPanel extends javax.swing.JPanel {
         btnCandidatar.setBorderPainted(false);
         btnCandidatar.setFocusPainted(false);
         btnCandidatar.setPreferredSize(new java.awt.Dimension(160, 36));
+        btnCandidatar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCandidatarActionPerformed(evt);
+            }
+        });
         pnlBotoes.add(btnCandidatar);
         pnlConteudo.add(pnlBotoes, java.awt.BorderLayout.SOUTH);
         add(pnlConteudo, java.awt.BorderLayout.CENTER);
@@ -135,6 +168,53 @@ public class BuscarVagasPanel extends javax.swing.JPanel {
         tela.mostrar(TelaPrincipal.DASHBOARD_CANDIDATO);
     }//GEN-LAST:event_btnVoltarActionPerformed
 
+
+    private void btnBuscarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBuscarActionPerformed
+        buscar();
+    }//GEN-LAST:event_btnBuscarActionPerformed
+
+    private void btnCandidatarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCandidatarActionPerformed
+        int linha = tblVagas.getSelectedRow();
+        if (linha < 0) {
+            JOptionPane.showMessageDialog(this, "Selecione uma vaga na tabela.", "Atenção", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        Vaga vaga = vagas.get(tblVagas.convertRowIndexToModel(linha));
+        Candidatura candidatura = new Candidatura();
+        candidatura.setCandidatoId(Sessao.candidato.getId());
+        candidatura.setVagaId(vaga.getId());
+        try {
+            new CandidaturaDAO().inserir(candidatura);
+            JOptionPane.showMessageDialog(this, "Candidatura realizada com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+        } catch (SQLException e) {
+            if (Util.duplicado(e)) {
+                JOptionPane.showMessageDialog(this, "Você já se candidatou a esta vaga.", "Atenção", JOptionPane.WARNING_MESSAGE);
+            } else {
+                Util.erro(this, e);
+            }
+        }
+    }//GEN-LAST:event_btnCandidatarActionPerformed
+
+    private void carregar() {
+        cmbArea.setSelectedIndex(0);
+        buscar();
+    }
+
+    private void buscar() {
+        String area = (String) cmbArea.getSelectedItem();
+        try {
+            VagaDAO dao = new VagaDAO();
+            vagas = cmbArea.getSelectedIndex() == 0 ? dao.listar() : dao.buscarPorArea(area);
+            List<Object[]> linhas = new ArrayList<>();
+            for (Vaga v : vagas) {
+                linhas.add(new Object[]{v.getTitulo(), v.getEmpresaNome(), v.getArea()});
+            }
+            Util.preencher(tblVagas, linhas);
+            txaDescricao.setText("");
+        } catch (SQLException e) {
+            Util.erro(this, e);
+        }
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnBuscar;

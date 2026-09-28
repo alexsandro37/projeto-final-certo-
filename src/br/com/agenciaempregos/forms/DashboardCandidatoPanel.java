@@ -1,6 +1,7 @@
 package br.com.agenciaempregos.forms;
 
 import br.com.agenciaempregos.main.TelaPrincipal;
+import br.com.agenciaempregos.main.Sessao;
 
 public class DashboardCandidatoPanel extends javax.swing.JPanel {
 
@@ -9,6 +10,12 @@ public class DashboardCandidatoPanel extends javax.swing.JPanel {
     public DashboardCandidatoPanel(TelaPrincipal tela) {
         this.tela = tela;
         initComponents();
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentShown(java.awt.event.ComponentEvent e) {
+                carregar();
+            }
+        });
     }
 
     @SuppressWarnings("unchecked")
@@ -119,6 +126,7 @@ public class DashboardCandidatoPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnSairActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSairActionPerformed
+        Sessao.limpar();
         tela.mostrar(TelaPrincipal.LOGIN);
     }//GEN-LAST:event_btnSairActionPerformed
 
@@ -138,6 +146,12 @@ public class DashboardCandidatoPanel extends javax.swing.JPanel {
         tela.mostrar(TelaPrincipal.PROCESSOS_CANDIDATO);
     }//GEN-LAST:event_btnProcessosActionPerformed
 
+
+    private void carregar() {
+        if (Sessao.usuario != null) {
+            lblSaudacao.setText("Olá, " + Sessao.usuario.getNome() + "! O que você quer fazer hoje?");
+        }
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnBuscarVagas;

@@ -1,14 +1,37 @@
 package br.com.agenciaempregos.forms;
 
 import br.com.agenciaempregos.main.TelaPrincipal;
+import br.com.agenciaempregos.dao.ProcessoSeletivoDAO;
+import br.com.agenciaempregos.main.Sessao;
+import br.com.agenciaempregos.main.Util;
+import br.com.agenciaempregos.model.ProcessoSeletivo;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.JOptionPane;
 
 public class ProcessosSeletivosEmpresaPanel extends javax.swing.JPanel {
 
     private final TelaPrincipal tela;
+    private List<ProcessoSeletivo> processos = new ArrayList<>();
 
     public ProcessosSeletivosEmpresaPanel(TelaPrincipal tela) {
         this.tela = tela;
         initComponents();
+        tblProcessos.getSelectionModel().addListSelectionListener(e -> {
+            int linha = tblProcessos.getSelectedRow();
+            if (linha >= 0) {
+                ProcessoSeletivo processo = processos.get(tblProcessos.convertRowIndexToModel(linha));
+                cmbSituacao.setSelectedItem(processo.getSituacao());
+                txtObservacao.setText(Util.texto(processo.getObservacao()));
+            }
+        });
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentShown(java.awt.event.ComponentEvent e) {
+                carregar();
+            }
+        });
     }
 
     @SuppressWarnings("unchecked")
@@ -98,6 +121,11 @@ public class ProcessosSeletivosEmpresaPanel extends javax.swing.JPanel {
         btnAtualizarProcesso.setBorderPainted(false);
         btnAtualizarProcesso.setFocusPainted(false);
         btnAtualizarProcesso.setPreferredSize(new java.awt.Dimension(190, 34));
+        btnAtualizarProcesso.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAtualizarProcessoActionPerformed(evt);
+            }
+        });
         pnlAtualizar.add(btnAtualizarProcesso);
         pnlConteudo.add(pnlAtualizar, java.awt.BorderLayout.SOUTH);
         add(pnlConteudo, java.awt.BorderLayout.CENTER);
@@ -107,6 +135,41 @@ public class ProcessosSeletivosEmpresaPanel extends javax.swing.JPanel {
         tela.mostrar(TelaPrincipal.DASHBOARD_EMPRESA);
     }//GEN-LAST:event_btnVoltarActionPerformed
 
+
+    private void btnAtualizarProcessoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAtualizarProcessoActionPerformed
+        int linha = tblProcessos.getSelectedRow();
+        if (linha < 0) {
+            JOptionPane.showMessageDialog(this, "Selecione um processo na tabela.", "Atenção", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        ProcessoSeletivo processo = processos.get(tblProcessos.convertRowIndexToModel(linha));
+        processo.setSituacao((String) cmbSituacao.getSelectedItem());
+        processo.setObservacao(txtObservacao.getText().trim());
+        try {
+            new ProcessoSeletivoDAO().atualizar(processo);
+            JOptionPane.showMessageDialog(this, "Processo atualizado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            carregar();
+        } catch (SQLException e) {
+            Util.erro(this, e);
+        }
+    }//GEN-LAST:event_btnAtualizarProcessoActionPerformed
+
+    private void carregar() {
+        if (Sessao.empresa == null) {
+            return;
+        }
+        try {
+            processos = new ProcessoSeletivoDAO().listarPorEmpresa(Sessao.empresa.getId());
+            List<Object[]> linhas = new ArrayList<>();
+            for (ProcessoSeletivo p : processos) {
+                linhas.add(new Object[]{p.getCandidatoNome(), p.getVagaTitulo(), p.getSituacao(), Util.texto(p.getObservacao())});
+            }
+            Util.preencher(tblProcessos, linhas);
+            txtObservacao.setText("");
+        } catch (SQLException e) {
+            Util.erro(this, e);
+        }
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAtualizarProcesso;

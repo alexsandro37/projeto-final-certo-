@@ -1,6 +1,8 @@
 package br.com.agenciaempregos.forms;
 
 import br.com.agenciaempregos.main.TelaPrincipal;
+import br.com.agenciaempregos.main.Sessao;
+import javax.swing.JOptionPane;
 
 public class DashboardEmpresaPanel extends javax.swing.JPanel {
 
@@ -9,6 +11,12 @@ public class DashboardEmpresaPanel extends javax.swing.JPanel {
     public DashboardEmpresaPanel(TelaPrincipal tela) {
         this.tela = tela;
         initComponents();
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentShown(java.awt.event.ComponentEvent e) {
+                carregar();
+            }
+        });
     }
 
     @SuppressWarnings("unchecked")
@@ -119,6 +127,7 @@ public class DashboardEmpresaPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnSairActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSairActionPerformed
+        Sessao.limpar();
         tela.mostrar(TelaPrincipal.LOGIN);
     }//GEN-LAST:event_btnSairActionPerformed
 
@@ -127,17 +136,38 @@ public class DashboardEmpresaPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_btnPerfilActionPerformed
 
     private void btnMinhasVagasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMinhasVagasActionPerformed
+        if (Sessao.empresa == null) {
+            JOptionPane.showMessageDialog(this, "Preencha o perfil da empresa antes de continuar.", "Atenção", JOptionPane.WARNING_MESSAGE);
+            tela.mostrar(TelaPrincipal.PERFIL_EMPRESA);
+            return;
+        }
         tela.mostrar(TelaPrincipal.MINHAS_VAGAS);
     }//GEN-LAST:event_btnMinhasVagasActionPerformed
 
     private void btnCandidaturasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCandidaturasActionPerformed
+        if (Sessao.empresa == null) {
+            JOptionPane.showMessageDialog(this, "Preencha o perfil da empresa antes de continuar.", "Atenção", JOptionPane.WARNING_MESSAGE);
+            tela.mostrar(TelaPrincipal.PERFIL_EMPRESA);
+            return;
+        }
         tela.mostrar(TelaPrincipal.CANDIDATURAS_EMPRESA);
     }//GEN-LAST:event_btnCandidaturasActionPerformed
 
     private void btnProcessosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnProcessosActionPerformed
+        if (Sessao.empresa == null) {
+            JOptionPane.showMessageDialog(this, "Preencha o perfil da empresa antes de continuar.", "Atenção", JOptionPane.WARNING_MESSAGE);
+            tela.mostrar(TelaPrincipal.PERFIL_EMPRESA);
+            return;
+        }
         tela.mostrar(TelaPrincipal.PROCESSOS_EMPRESA);
     }//GEN-LAST:event_btnProcessosActionPerformed
 
+
+    private void carregar() {
+        if (Sessao.usuario != null) {
+            lblSaudacao.setText("Olá, " + Sessao.usuario.getNome() + "! O que você quer fazer hoje?");
+        }
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnCandidaturas;

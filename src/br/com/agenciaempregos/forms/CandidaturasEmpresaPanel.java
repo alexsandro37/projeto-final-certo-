@@ -1,14 +1,37 @@
 package br.com.agenciaempregos.forms;
 
 import br.com.agenciaempregos.main.TelaPrincipal;
+import br.com.agenciaempregos.dao.CandidaturaDAO;
+import br.com.agenciaempregos.dao.ProcessoSeletivoDAO;
+import br.com.agenciaempregos.main.Sessao;
+import br.com.agenciaempregos.main.Util;
+import br.com.agenciaempregos.model.Candidatura;
+import br.com.agenciaempregos.model.ProcessoSeletivo;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.JOptionPane;
 
 public class CandidaturasEmpresaPanel extends javax.swing.JPanel {
 
     private final TelaPrincipal tela;
+    private List<Candidatura> candidaturas = new ArrayList<>();
 
     public CandidaturasEmpresaPanel(TelaPrincipal tela) {
         this.tela = tela;
         initComponents();
+        tblCandidaturas.getSelectionModel().addListSelectionListener(e -> {
+            int linha = tblCandidaturas.getSelectedRow();
+            if (linha >= 0) {
+                cmbStatus.setSelectedItem(candidaturas.get(tblCandidaturas.convertRowIndexToModel(linha)).getStatus());
+            }
+        });
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentShown(java.awt.event.ComponentEvent e) {
+                carregar();
+            }
+        });
     }
 
     @SuppressWarnings("unchecked")
@@ -89,6 +112,11 @@ public class CandidaturasEmpresaPanel extends javax.swing.JPanel {
         btnAtualizarStatus.setBorderPainted(false);
         btnAtualizarStatus.setFocusPainted(false);
         btnAtualizarStatus.setPreferredSize(new java.awt.Dimension(175, 34));
+        btnAtualizarStatus.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAtualizarStatusActionPerformed(evt);
+            }
+        });
         pnlAtualizar.add(btnAtualizarStatus);
         pnlConteudo.add(pnlAtualizar, java.awt.BorderLayout.SOUTH);
         add(pnlConteudo, java.awt.BorderLayout.CENTER);
@@ -98,6 +126,45 @@ public class CandidaturasEmpresaPanel extends javax.swing.JPanel {
         tela.mostrar(TelaPrincipal.DASHBOARD_EMPRESA);
     }//GEN-LAST:event_btnVoltarActionPerformed
 
+
+    private void btnAtualizarStatusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAtualizarStatusActionPerformed
+        int linha = tblCandidaturas.getSelectedRow();
+        if (linha < 0) {
+            JOptionPane.showMessageDialog(this, "Selecione uma candidatura na tabela.", "Atenção", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        Candidatura candidatura = candidaturas.get(tblCandidaturas.convertRowIndexToModel(linha));
+        String status = (String) cmbStatus.getSelectedItem();
+        try {
+            new CandidaturaDAO().atualizarStatus(candidatura.getId(), status);
+            ProcessoSeletivoDAO processos = new ProcessoSeletivoDAO();
+            if (status.equals("Em processo seletivo") && processos.buscarPorCandidatura(candidatura.getId()) == null) {
+                ProcessoSeletivo processo = new ProcessoSeletivo();
+                processo.setCandidaturaId(candidatura.getId());
+                processos.inserir(processo);
+            }
+            JOptionPane.showMessageDialog(this, "Status atualizado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            carregar();
+        } catch (SQLException e) {
+            Util.erro(this, e);
+        }
+    }//GEN-LAST:event_btnAtualizarStatusActionPerformed
+
+    private void carregar() {
+        if (Sessao.empresa == null) {
+            return;
+        }
+        try {
+            candidaturas = new CandidaturaDAO().listarPorEmpresa(Sessao.empresa.getId());
+            List<Object[]> linhas = new ArrayList<>();
+            for (Candidatura c : candidaturas) {
+                linhas.add(new Object[]{c.getCandidatoNome(), c.getVagaTitulo(), Util.data(c.getDataCandidatura()), c.getStatus()});
+            }
+            Util.preencher(tblCandidaturas, linhas);
+        } catch (SQLException e) {
+            Util.erro(this, e);
+        }
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAtualizarStatus;

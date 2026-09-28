@@ -1,6 +1,12 @@
 package br.com.agenciaempregos.forms;
 
 import br.com.agenciaempregos.main.TelaPrincipal;
+import br.com.agenciaempregos.dao.EmpresaDAO;
+import br.com.agenciaempregos.main.Sessao;
+import br.com.agenciaempregos.main.Util;
+import br.com.agenciaempregos.model.Empresa;
+import java.sql.SQLException;
+import javax.swing.JOptionPane;
 
 public class PerfilEmpresaPanel extends javax.swing.JPanel {
 
@@ -9,6 +15,12 @@ public class PerfilEmpresaPanel extends javax.swing.JPanel {
     public PerfilEmpresaPanel(TelaPrincipal tela) {
         this.tela = tela;
         initComponents();
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentShown(java.awt.event.ComponentEvent e) {
+                carregar();
+            }
+        });
     }
 
     @SuppressWarnings("unchecked")
@@ -181,6 +193,11 @@ public class PerfilEmpresaPanel extends javax.swing.JPanel {
         btnSalvar.setBorderPainted(false);
         btnSalvar.setFocusPainted(false);
         btnSalvar.setPreferredSize(new java.awt.Dimension(150, 36));
+        btnSalvar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSalvarActionPerformed(evt);
+            }
+        });
         pnlBotoes.add(btnSalvar);
         pnlConteudo.add(pnlBotoes, java.awt.BorderLayout.SOUTH);
         add(pnlConteudo, java.awt.BorderLayout.CENTER);
@@ -190,6 +207,52 @@ public class PerfilEmpresaPanel extends javax.swing.JPanel {
         tela.mostrar(TelaPrincipal.DASHBOARD_EMPRESA);
     }//GEN-LAST:event_btnVoltarActionPerformed
 
+
+    private void btnSalvarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSalvarActionPerformed
+        String nome = txtNome.getText().trim();
+        String cnpj = txtCnpj.getText().replaceAll("\\D", "");
+        if (nome.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Informe o nome da empresa.", "Atenção", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (cnpj.length() != 14) {
+            JOptionPane.showMessageDialog(this, "O CNPJ deve ter 14 números.", "Atenção", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        Empresa empresa = Sessao.empresa != null ? Sessao.empresa : new Empresa();
+        empresa.setUsuarioId(Sessao.usuario.getId());
+        empresa.setNome(nome);
+        empresa.setCnpj(cnpj);
+        empresa.setAreaAtuacao((String) cmbArea.getSelectedItem());
+        empresa.setTelefone(txtTelefone.getText().trim());
+        empresa.setSobre(txaSobre.getText().trim());
+        try {
+            EmpresaDAO dao = new EmpresaDAO();
+            if (empresa.getId() == 0) {
+                dao.inserir(empresa);
+            } else {
+                dao.atualizar(empresa);
+            }
+            Sessao.empresa = empresa;
+            txtCnpj.setText(cnpj);
+            JOptionPane.showMessageDialog(this, "Perfil salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+        } catch (SQLException e) {
+            if (Util.duplicado(e)) {
+                JOptionPane.showMessageDialog(this, "Já existe uma empresa com este CNPJ.", "Atenção", JOptionPane.WARNING_MESSAGE);
+            } else {
+                Util.erro(this, e);
+            }
+        }
+    }//GEN-LAST:event_btnSalvarActionPerformed
+
+    private void carregar() {
+        Empresa empresa = Sessao.empresa;
+        txtNome.setText(empresa == null ? "" : empresa.getNome());
+        txtCnpj.setText(empresa == null ? "" : empresa.getCnpj());
+        Util.selecionar(cmbArea, empresa == null ? null : empresa.getAreaAtuacao());
+        txtTelefone.setText(empresa == null ? "" : Util.texto(empresa.getTelefone()));
+        txaSobre.setText(empresa == null ? "" : Util.texto(empresa.getSobre()));
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnSalvar;

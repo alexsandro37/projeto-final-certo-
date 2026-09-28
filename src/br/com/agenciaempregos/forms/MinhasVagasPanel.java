@@ -1,14 +1,29 @@
 package br.com.agenciaempregos.forms;
 
 import br.com.agenciaempregos.main.TelaPrincipal;
+import br.com.agenciaempregos.dao.VagaDAO;
+import br.com.agenciaempregos.main.Sessao;
+import br.com.agenciaempregos.main.Util;
+import br.com.agenciaempregos.model.Vaga;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.JOptionPane;
 
 public class MinhasVagasPanel extends javax.swing.JPanel {
 
     private final TelaPrincipal tela;
+    private List<Vaga> vagas = new ArrayList<>();
 
     public MinhasVagasPanel(TelaPrincipal tela) {
         this.tela = tela;
         initComponents();
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentShown(java.awt.event.ComponentEvent e) {
+                carregar();
+            }
+        });
     }
 
     @SuppressWarnings("unchecked")
@@ -96,6 +111,11 @@ public class MinhasVagasPanel extends javax.swing.JPanel {
         btnAlterar.setBorderPainted(false);
         btnAlterar.setFocusPainted(false);
         btnAlterar.setPreferredSize(new java.awt.Dimension(150, 36));
+        btnAlterar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAlterarActionPerformed(evt);
+            }
+        });
         pnlBotoes.add(btnAlterar);
         btnExcluir.setText("Excluir");
         btnExcluir.setFont(new java.awt.Font("Tahoma", 1, 13));
@@ -105,6 +125,11 @@ public class MinhasVagasPanel extends javax.swing.JPanel {
         btnExcluir.setBorderPainted(false);
         btnExcluir.setFocusPainted(false);
         btnExcluir.setPreferredSize(new java.awt.Dimension(150, 36));
+        btnExcluir.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnExcluirActionPerformed(evt);
+            }
+        });
         pnlBotoes.add(btnExcluir);
         pnlConteudo.add(pnlBotoes, java.awt.BorderLayout.SOUTH);
         add(pnlConteudo, java.awt.BorderLayout.CENTER);
@@ -115,9 +140,62 @@ public class MinhasVagasPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_btnVoltarActionPerformed
 
     private void btnNovaVagaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNovaVagaActionPerformed
+        Sessao.vagaEmEdicao = null;
         tela.mostrar(TelaPrincipal.CADASTRO_VAGA);
     }//GEN-LAST:event_btnNovaVagaActionPerformed
 
+
+    private void btnAlterarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAlterarActionPerformed
+        Vaga vaga = vagaSelecionada();
+        if (vaga == null) {
+            return;
+        }
+        Sessao.vagaEmEdicao = vaga;
+        tela.mostrar(TelaPrincipal.CADASTRO_VAGA);
+    }//GEN-LAST:event_btnAlterarActionPerformed
+
+    private void btnExcluirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExcluirActionPerformed
+        Vaga vaga = vagaSelecionada();
+        if (vaga == null) {
+            return;
+        }
+        int resposta = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja excluir este registro?",
+                "Excluir vaga", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        if (resposta != JOptionPane.YES_OPTION) {
+            return;
+        }
+        try {
+            new VagaDAO().excluir(vaga.getId());
+            carregar();
+        } catch (SQLException e) {
+            Util.erro(this, e);
+        }
+    }//GEN-LAST:event_btnExcluirActionPerformed
+
+    private void carregar() {
+        if (Sessao.empresa == null) {
+            return;
+        }
+        try {
+            vagas = new VagaDAO().listarPorEmpresa(Sessao.empresa.getId());
+            List<Object[]> linhas = new ArrayList<>();
+            for (Vaga v : vagas) {
+                linhas.add(new Object[]{v.getTitulo(), v.getArea(), Util.texto(v.getCidade()), Util.moeda(v.getSalario())});
+            }
+            Util.preencher(tblVagas, linhas);
+        } catch (SQLException e) {
+            Util.erro(this, e);
+        }
+    }
+
+    private Vaga vagaSelecionada() {
+        int linha = tblVagas.getSelectedRow();
+        if (linha < 0) {
+            JOptionPane.showMessageDialog(this, "Selecione uma vaga na tabela.", "Atenção", JOptionPane.WARNING_MESSAGE);
+            return null;
+        }
+        return vagas.get(tblVagas.convertRowIndexToModel(linha));
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAlterar;

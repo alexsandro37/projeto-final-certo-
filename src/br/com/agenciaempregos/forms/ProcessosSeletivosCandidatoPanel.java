@@ -1,6 +1,13 @@
 package br.com.agenciaempregos.forms;
 
 import br.com.agenciaempregos.main.TelaPrincipal;
+import br.com.agenciaempregos.dao.ProcessoSeletivoDAO;
+import br.com.agenciaempregos.main.Sessao;
+import br.com.agenciaempregos.main.Util;
+import br.com.agenciaempregos.model.ProcessoSeletivo;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ProcessosSeletivosCandidatoPanel extends javax.swing.JPanel {
 
@@ -9,6 +16,12 @@ public class ProcessosSeletivosCandidatoPanel extends javax.swing.JPanel {
     public ProcessosSeletivosCandidatoPanel(TelaPrincipal tela) {
         this.tela = tela;
         initComponents();
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentShown(java.awt.event.ComponentEvent e) {
+                carregar();
+            }
+        });
     }
 
     @SuppressWarnings("unchecked")
@@ -75,6 +88,21 @@ public class ProcessosSeletivosCandidatoPanel extends javax.swing.JPanel {
         tela.mostrar(TelaPrincipal.DASHBOARD_CANDIDATO);
     }//GEN-LAST:event_btnVoltarActionPerformed
 
+
+    private void carregar() {
+        if (Sessao.candidato == null) {
+            return;
+        }
+        try {
+            List<Object[]> linhas = new ArrayList<>();
+            for (ProcessoSeletivo p : new ProcessoSeletivoDAO().listarPorCandidato(Sessao.candidato.getId())) {
+                linhas.add(new Object[]{p.getVagaTitulo(), p.getEmpresaNome(), p.getSituacao(), Util.texto(p.getObservacao())});
+            }
+            Util.preencher(tblProcessos, linhas);
+        } catch (SQLException e) {
+            Util.erro(this, e);
+        }
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnVoltar;

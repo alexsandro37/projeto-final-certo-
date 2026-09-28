@@ -1,6 +1,12 @@
 package br.com.agenciaempregos.forms;
 
 import br.com.agenciaempregos.main.TelaPrincipal;
+import br.com.agenciaempregos.dao.VagaDAO;
+import br.com.agenciaempregos.main.Sessao;
+import br.com.agenciaempregos.main.Util;
+import br.com.agenciaempregos.model.Vaga;
+import java.sql.SQLException;
+import javax.swing.JOptionPane;
 
 public class CadastroVagaPanel extends javax.swing.JPanel {
 
@@ -9,6 +15,12 @@ public class CadastroVagaPanel extends javax.swing.JPanel {
     public CadastroVagaPanel(TelaPrincipal tela) {
         this.tela = tela;
         initComponents();
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentShown(java.awt.event.ComponentEvent e) {
+                carregar();
+            }
+        });
     }
 
     @SuppressWarnings("unchecked")
@@ -182,6 +194,11 @@ public class CadastroVagaPanel extends javax.swing.JPanel {
         btnSalvar.setBorderPainted(false);
         btnSalvar.setFocusPainted(false);
         btnSalvar.setPreferredSize(new java.awt.Dimension(150, 36));
+        btnSalvar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSalvarActionPerformed(evt);
+            }
+        });
         pnlBotoes.add(btnSalvar);
         btnCancelar.setText("Cancelar");
         btnCancelar.setFont(new java.awt.Font("Tahoma", 1, 13));
@@ -202,13 +219,69 @@ public class CadastroVagaPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnVoltarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVoltarActionPerformed
+        Sessao.vagaEmEdicao = null;
         tela.mostrar(TelaPrincipal.MINHAS_VAGAS);
     }//GEN-LAST:event_btnVoltarActionPerformed
 
     private void btnCancelarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelarActionPerformed
+        Sessao.vagaEmEdicao = null;
         tela.mostrar(TelaPrincipal.MINHAS_VAGAS);
     }//GEN-LAST:event_btnCancelarActionPerformed
 
+
+    private void btnSalvarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSalvarActionPerformed
+        String titulo = txtTitulo.getText().trim();
+        if (titulo.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Informe o título da vaga.", "Atenção", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        Double salario = null;
+        String textoSalario = txtSalario.getText().trim();
+        if (!textoSalario.isEmpty()) {
+            try {
+                if (textoSalario.contains(",")) {
+                    textoSalario = textoSalario.replace(".", "").replace(",", ".");
+                }
+                salario = Double.parseDouble(textoSalario);
+            } catch (NumberFormatException e) {
+                salario = -1.0;
+            }
+            if (salario < 0) {
+                JOptionPane.showMessageDialog(this, "Informe um salário válido.", "Atenção", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+        }
+        Vaga vaga = Sessao.vagaEmEdicao != null ? Sessao.vagaEmEdicao : new Vaga();
+        vaga.setEmpresaId(Sessao.empresa.getId());
+        vaga.setTitulo(titulo);
+        vaga.setDescricao(txaDescricao.getText().trim());
+        vaga.setArea((String) cmbArea.getSelectedItem());
+        vaga.setCidade(txtCidade.getText().trim());
+        vaga.setSalario(salario);
+        try {
+            VagaDAO dao = new VagaDAO();
+            if (vaga.getId() == 0) {
+                dao.inserir(vaga);
+            } else {
+                dao.atualizar(vaga);
+            }
+            Sessao.vagaEmEdicao = null;
+            JOptionPane.showMessageDialog(this, "Dado cadastrado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            tela.mostrar(TelaPrincipal.MINHAS_VAGAS);
+        } catch (SQLException e) {
+            Util.erro(this, e);
+        }
+    }//GEN-LAST:event_btnSalvarActionPerformed
+
+    private void carregar() {
+        Vaga vaga = Sessao.vagaEmEdicao;
+        lblTitulo.setText(vaga == null ? "Cadastro de vaga" : "Alterar vaga");
+        txtTitulo.setText(vaga == null ? "" : vaga.getTitulo());
+        txaDescricao.setText(vaga == null ? "" : Util.texto(vaga.getDescricao()));
+        Util.selecionar(cmbArea, vaga == null ? null : vaga.getArea());
+        txtCidade.setText(vaga == null ? "" : Util.texto(vaga.getCidade()));
+        txtSalario.setText(vaga == null || vaga.getSalario() == null ? "" : String.valueOf(vaga.getSalario()));
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnCancelar;

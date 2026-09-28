@@ -1,6 +1,12 @@
 package br.com.agenciaempregos.forms;
 
 import br.com.agenciaempregos.main.TelaPrincipal;
+import br.com.agenciaempregos.dao.UsuarioDAO;
+import br.com.agenciaempregos.main.Sessao;
+import br.com.agenciaempregos.main.Util;
+import br.com.agenciaempregos.model.Usuario;
+import java.sql.SQLException;
+import javax.swing.JOptionPane;
 
 public class LoginPanel extends javax.swing.JPanel {
 
@@ -139,7 +145,26 @@ public class LoginPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnEntrarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEntrarActionPerformed
-        tela.mostrar(TelaPrincipal.ESCOLHA_ACESSO);
+        String email = txtEmail.getText().trim();
+        String senha = new String(pwdSenha.getPassword());
+        if (email.isEmpty() || senha.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Informe o e-mail e a senha.", "Login", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        try {
+            Usuario usuario = new UsuarioDAO().autenticar(email, senha);
+            if (usuario == null) {
+                JOptionPane.showMessageDialog(this, "E-mail ou senha incorretos.", "Login", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            Sessao.limpar();
+            Sessao.usuario = usuario;
+            txtEmail.setText("");
+            pwdSenha.setText("");
+            tela.mostrar(TelaPrincipal.ESCOLHA_ACESSO);
+        } catch (SQLException e) {
+            Util.erro(this, e);
+        }
     }//GEN-LAST:event_btnEntrarActionPerformed
 
     private void btnCriarContaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCriarContaActionPerformed

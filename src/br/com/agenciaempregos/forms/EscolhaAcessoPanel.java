@@ -1,6 +1,12 @@
 package br.com.agenciaempregos.forms;
 
 import br.com.agenciaempregos.main.TelaPrincipal;
+import br.com.agenciaempregos.dao.CandidatoDAO;
+import br.com.agenciaempregos.dao.EmpresaDAO;
+import br.com.agenciaempregos.main.Sessao;
+import br.com.agenciaempregos.main.Util;
+import br.com.agenciaempregos.model.Candidato;
+import java.sql.SQLException;
 
 public class EscolhaAcessoPanel extends javax.swing.JPanel {
 
@@ -100,14 +106,32 @@ public class EscolhaAcessoPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnCandidatoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCandidatoActionPerformed
-        tela.mostrar(TelaPrincipal.DASHBOARD_CANDIDATO);
+        try {
+            CandidatoDAO dao = new CandidatoDAO();
+            Candidato candidato = dao.buscarPorUsuario(Sessao.usuario.getId());
+            if (candidato == null) {
+                candidato = new Candidato();
+                candidato.setUsuarioId(Sessao.usuario.getId());
+                dao.inserir(candidato);
+            }
+            Sessao.candidato = candidato;
+            tela.mostrar(TelaPrincipal.DASHBOARD_CANDIDATO);
+        } catch (SQLException e) {
+            Util.erro(this, e);
+        }
     }//GEN-LAST:event_btnCandidatoActionPerformed
 
     private void btnEmpresaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmpresaActionPerformed
-        tela.mostrar(TelaPrincipal.DASHBOARD_EMPRESA);
+        try {
+            Sessao.empresa = new EmpresaDAO().buscarPorUsuario(Sessao.usuario.getId());
+            tela.mostrar(TelaPrincipal.DASHBOARD_EMPRESA);
+        } catch (SQLException e) {
+            Util.erro(this, e);
+        }
     }//GEN-LAST:event_btnEmpresaActionPerformed
 
     private void btnVoltarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVoltarActionPerformed
+        Sessao.limpar();
         tela.mostrar(TelaPrincipal.LOGIN);
     }//GEN-LAST:event_btnVoltarActionPerformed
 

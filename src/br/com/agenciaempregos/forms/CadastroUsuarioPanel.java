@@ -1,6 +1,11 @@
 package br.com.agenciaempregos.forms;
 
 import br.com.agenciaempregos.main.TelaPrincipal;
+import br.com.agenciaempregos.dao.UsuarioDAO;
+import br.com.agenciaempregos.main.Util;
+import br.com.agenciaempregos.model.Usuario;
+import java.sql.SQLException;
+import javax.swing.JOptionPane;
 
 public class CadastroUsuarioPanel extends javax.swing.JPanel {
 
@@ -172,13 +177,53 @@ public class CadastroUsuarioPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnCriarContaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCriarContaActionPerformed
-        tela.mostrar(TelaPrincipal.LOGIN);
+        String nome = txtNome.getText().trim();
+        String email = txtEmail.getText().trim();
+        String senha = new String(pwdSenha.getPassword());
+        String confirmar = new String(pwdConfirmarSenha.getPassword());
+        if (nome.isEmpty() || email.isEmpty() || senha.isEmpty() || confirmar.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Preencha todos os campos.", "Atenção", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (!email.matches("[^@\\s]+@[^@\\s]+\\.[^@\\s]+")) {
+            JOptionPane.showMessageDialog(this, "E-mail inválido.", "Atenção", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (!senha.equals(confirmar)) {
+            JOptionPane.showMessageDialog(this, "As senhas não conferem.", "Atenção", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        try {
+            UsuarioDAO dao = new UsuarioDAO();
+            if (dao.buscarPorEmail(email) != null) {
+                JOptionPane.showMessageDialog(this, "Já existe uma conta com este e-mail.", "Atenção", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            Usuario usuario = new Usuario();
+            usuario.setNome(nome);
+            usuario.setEmail(email);
+            usuario.setSenha(senha);
+            dao.inserir(usuario);
+            JOptionPane.showMessageDialog(this, "Dado cadastrado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            limparCampos();
+            tela.mostrar(TelaPrincipal.LOGIN);
+        } catch (SQLException e) {
+            Util.erro(this, e);
+        }
     }//GEN-LAST:event_btnCriarContaActionPerformed
 
     private void btnVoltarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVoltarActionPerformed
+        limparCampos();
         tela.mostrar(TelaPrincipal.LOGIN);
     }//GEN-LAST:event_btnVoltarActionPerformed
 
+
+    private void limparCampos() {
+        txtNome.setText("");
+        txtEmail.setText("");
+        pwdSenha.setText("");
+        pwdConfirmarSenha.setText("");
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnCriarConta;

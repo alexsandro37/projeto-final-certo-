@@ -191,6 +191,9 @@
                   <Dimension value="[175, 34]"/>
                 </Property>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnAtualizarStatusActionPerformed"/>
+              </Events>
             </Component>
           </SubComponents>
         </Container>
