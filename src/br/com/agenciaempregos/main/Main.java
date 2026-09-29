@@ -14,7 +14,10 @@ public class Main {
                     "Erro", JOptionPane.ERROR_MESSAGE);
             return;
         }
+<<<<<<< HEAD
         System.out.println("Banco em uso: " + new java.io.File("database/agencia_empregos.db").getAbsolutePath());
+=======
+>>>>>>> 746b9a529d57dc05dcaf7900f68636e2fbb8c37f
         SwingUtilities.invokeLater(() -> new TelaPrincipal().setVisible(true));
     }
 }
