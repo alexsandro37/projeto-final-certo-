@@ -140,14 +140,12 @@ public class MinhasVagasPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_btnVoltarActionPerformed
 
     private void btnNovaVagaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNovaVagaActionPerformed
-<<<<<<< HEAD
+
         if (Sessao.empresa == null) {
             JOptionPane.showMessageDialog(this, "Salve o perfil da empresa antes de cadastrar vagas.", "Atenção", JOptionPane.WARNING_MESSAGE);
             tela.mostrar(TelaPrincipal.PERFIL_EMPRESA);
             return;
         }
-=======
->>>>>>> 746b9a529d57dc05dcaf7900f68636e2fbb8c37f
         Sessao.vagaEmEdicao = null;
         tela.mostrar(TelaPrincipal.CADASTRO_VAGA);
     }//GEN-LAST:event_btnNovaVagaActionPerformed
